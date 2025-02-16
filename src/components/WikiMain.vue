@@ -1,9 +1,11 @@
 <template>
   <div :class="{ dark: isDark }" class="wrapper">
+    <div class="app-title">RAND.WIKI&#9860;</div>
     <div class="buttons">
-      <button @click="getRandomArticle" class="new-article">New Article</button>
-      <a :href="url" target="_blank" class="read-more">Read more</a>
+      <button @click="getRandomArticle" class="new-article">Random</button>
+      <button :href="url" target="_blank" class="read-more">Read More</button>
     </div>
+    <div class="desc">click "Random" or swipe right if you're on mobile</div>
     <button @click="toggleTheme" class="theme-toggle">
       <img 
         src="/public/images/night2.png" 
@@ -73,9 +75,10 @@ export default {
       this.translateX = window.innerWidth;
 
       setTimeout(() => {
-        this.translateX = 0; 
-        this.loading = false;
-      }, 100);
+  this.translateX = 0; 
+  this.loading = false;
+}, 100);
+
     })
     .catch((err) => {
       console.error(err);
@@ -108,7 +111,7 @@ export default {
     
     setTimeout(() => {
       this.getRandomArticle();
-    }, 200);
+    }, 100);
   } else {
     this.translateX = 0;
   }
@@ -122,18 +125,36 @@ export default {
 
 
 <style scoped>
+
+.app-title {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 30px;
+  color: #649cd8;
+  font-weight: 550;
+}
+
+.desc {
+  font-size: 15px;
+  color: rgb(122, 126, 126);
+  font-style: italic;
+  margin-bottom: 1.5rem;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
 .wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #f7f1e9;
+  background-color: #fdfdfd;
   min-height: 100vh;
   padding: 3px;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
 
 .container {
-  width: 100%;
+  width: 100vw;
   max-width: 500px;
   min-height: 300px; 
   background-color: #fff;
@@ -145,6 +166,7 @@ export default {
   cursor: pointer;
   overflow: hidden;
   transition: transform 0.3s ease-out, opacity 0.2s ease-out;
+  will-change: transform;
 }
 
 .container.loading {
@@ -195,6 +217,11 @@ export default {
   height: 18px;
 }
 
+.wiki-image {
+  width: 95%;
+  height: auto;
+}
+
 @keyframes pulse {
   0% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -239,6 +266,7 @@ export default {
   font-size: 14px;
   word-wrap: break-word;
   margin-bottom: 20px;
+  font-style: italic;
 }
 
 .summary {
@@ -246,6 +274,7 @@ export default {
   word-wrap: break-word;
   text-align: start;
   text-indent: 2rem;
+  margin-top: 2rem;
 }
 
 .buttons {
@@ -255,11 +284,9 @@ export default {
   margin-top: 20px;
 }
 
-.new-article,
-.read-more {
-  padding: 10px 20px;
-  background-color: #71a0d3;
-  color: #fff;
+.buttons button {
+  padding: 3px 10px;
+  background-color: #c5dfe6;
   border: none;
   border-radius: 5px;
   text-decoration: none;
@@ -287,19 +314,19 @@ export default {
 @media only screen and (max-width: 600px) {
   .container {
     max-width: 100%;
-    padding-top: 60px;
+    padding-top: 0px;
   }
   
   .title {
-    font-size: 22px;
+    font-size: 25px;
   }
   
   .description {
-    font-size: 12px;
+    font-size: 14px;
   }
   
   .summary {
-    font-size: 16px;
+    font-size: 14px;
   }
   
   .theme-toggle img {
@@ -308,9 +335,12 @@ export default {
   
   .new-article,
   .read-more {
-    padding: 5px 10px;
     font-size: 11px;
   }
+
+  .desc {
+  font-size: 13px;
+}
 }
 </style>
 
