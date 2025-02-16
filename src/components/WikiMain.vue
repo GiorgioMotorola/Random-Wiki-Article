@@ -45,7 +45,7 @@ export default {
     touchStartX: 0,
     touchEndX: 0,
     articleKey: 0, 
-    swipeThreshold: 250
+    swipeThreshold: 120
   };
 },
 methods: {
