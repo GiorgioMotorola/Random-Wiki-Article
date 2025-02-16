@@ -5,13 +5,19 @@
       <a :href="url" target="_blank" class="read-more">Read more</a>
     </div>
     <button @click="toggleTheme" class="theme-toggle">
-        <img 
-          src="/public/images/night2.png" 
-          alt="Theme toggle icon" 
-          class="toggle-icon"
-          :class="{ rotated: isDark }" />
-      </button>
-    <div class="container">
+      <img 
+        src="/public/images/night2.png" 
+        alt="Theme toggle icon" 
+        class="toggle-icon"
+        :class="{ rotated: isDark }" />
+    </button>
+    <!-- Add touch and click handlers here -->
+    <div 
+      class="container"
+      @touchstart="handleTouchStart"
+      @touchend="handleTouchEnd"
+      @click="openArticle"
+    >
       <div class="body-container">
         <div class="title">{{ title }}</div>
         <div class="description">{{ description }}</div>
@@ -21,8 +27,6 @@
     </div>
   </div>
 </template>
-
-
 
 
 <script>
@@ -35,6 +39,8 @@ export default {
       image: "",
       url: "",
       isDark: false,
+      touchStartY: 0,
+      touchEndY: 0,
     };
   },
   methods: {
@@ -53,12 +59,31 @@ export default {
     toggleTheme() {
       this.isDark = !this.isDark;
     },
+    openArticle() {
+      // Open the article URL in a new tab when container is tapped/clicked
+      if (this.url) {
+        window.open(this.url, "_blank");
+      }
+    },
+    handleTouchStart(e) {
+      // Capture the initial touch Y coordinate
+      this.touchStartY = e.changedTouches[0].screenY;
+    },
+    handleTouchEnd(e) {
+      // Capture the final touch Y coordinate
+      this.touchEndY = e.changedTouches[0].screenY;
+      // If swipe up (difference greater than 50px), load a new article
+      if (this.touchStartY - this.touchEndY > 50) {
+        this.getRandomArticle();
+      }
+    },
   },
   mounted() {
     this.getRandomArticle();
   },
 };
 </script>
+
 
 <style scoped>
 
@@ -78,9 +103,10 @@ export default {
   background-color: #fff;
   border: 1px solid black;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   position: relative;
   padding-top: 60px; 
+  cursor: pointer; /* Indicates that it is clickable */
 }
 
 .body-container {
@@ -183,12 +209,10 @@ export default {
   }
 
   .new-article,
-.read-more {
-  padding: 5px 10px;
-  background-color: #71a0d3;
-  color: #fff;
-  font-size: 11px;
-}
+  .read-more {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
 }
 
 </style>
