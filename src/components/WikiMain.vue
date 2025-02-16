@@ -11,20 +11,23 @@
         class="toggle-icon"
         :class="{ rotated: isDark }" />
     </button>
-    <!-- Add touch and click handlers here -->
-    <div 
-      class="container"
-      @touchstart="handleTouchStart"
-      @touchend="handleTouchEnd"
-      @click="openArticle"
-    >
-      <div class="body-container">
-        <div class="title">{{ title }}</div>
-        <div class="description">{{ description }}</div>
-        <img class="wiki-image" v-if="image" :src="image" :alt="title" />
-        <div class="summary">{{ summary }}</div>
+    <!-- Wrap the container in a transition with a dynamic key -->
+    <transition name="slide">
+      <div
+        :key="articleKey"
+        class="container"
+        @touchstart="handleTouchStart"
+        @touchend="handleTouchEnd"
+        @click="openArticle"
+      >
+        <div class="body-container">
+          <div class="title">{{ title }}</div>
+          <div class="description">{{ description }}</div>
+          <img class="wiki-image" v-if="image" :src="image" :alt="title" />
+          <div class="summary">{{ summary }}</div>
+        </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -32,57 +35,57 @@
 <script>
 export default {
   data() {
-    return {
-      title: "",
-      description: "",
-      summary: "",
-      image: "",
-      url: "",
-      isDark: false,
-      touchStartY: 0,
-      touchEndY: 0,
-    };
+  return {
+    title: "",
+    description: "",
+    summary: "",
+    image: "",
+    url: "",
+    isDark: false,
+    touchStartY: 0,
+    touchEndY: 0,
+    articleKey: 0, 
+    swipeThreshold: 300
+  };
+},
+methods: {
+  getRandomArticle() {
+    fetch("https://en.wikipedia.org/api/rest_v1/page/random/summary")
+      .then((res) => res.json())
+      .then((data) => {
+        this.title = data.title;
+        this.description = data.description || "No description available";
+        this.summary = data.extract;
+        this.image = data.thumbnail ? data.thumbnail.source : "";
+        this.url = data.content_urls.desktop.page;
+        this.articleKey++;
+      })
+      .catch(console.error);
   },
-  methods: {
-    getRandomArticle() {
-      fetch("https://en.wikipedia.org/api/rest_v1/page/random/summary")
-        .then((res) => res.json())
-        .then((data) => {
-          this.title = data.title;
-          this.description = data.description || "No description available";
-          this.summary = data.extract;
-          this.image = data.thumbnail ? data.thumbnail.source : "";
-          this.url = data.content_urls.desktop.page;
-        })
-        .catch(console.error);
-    },
-    toggleTheme() {
-      this.isDark = !this.isDark;
-    },
-    openArticle() {
-      // Open the article URL in a new tab when container is tapped/clicked
-      if (this.url) {
-        window.open(this.url, "_blank");
-      }
-    },
-    handleTouchStart(e) {
-      // Capture the initial touch Y coordinate
-      this.touchStartY = e.changedTouches[0].screenY;
-    },
-    handleTouchEnd(e) {
-      // Capture the final touch Y coordinate
-      this.touchEndY = e.changedTouches[0].screenY;
-      // If swipe up (difference greater than 50px), load a new article
-      if (this.touchStartY - this.touchEndY > 50) {
-        this.getRandomArticle();
-      }
-    },
+  toggleTheme() {
+    this.isDark = !this.isDark;
   },
+  openArticle() {
+    if (this.url) {
+      window.open(this.url, "_blank");
+    }
+  },
+  handleTouchStart(e) {
+    this.touchStartY = e.changedTouches[0].screenY;
+  },
+  handleTouchEnd(e) {
+    this.touchEndY = e.changedTouches[0].screenY;
+    if (this.touchStartY - this.touchEndY > this.swipeThreshold) {
+      this.getRandomArticle();
+    }
+  },
+},
   mounted() {
     this.getRandomArticle();
   },
 };
 </script>
+
 
 
 <style scoped>
@@ -184,6 +187,18 @@ export default {
 .new-article:hover,
 .read-more:hover {
   background-color: #0056b3;
+}
+
+/* Transition animations for swipe up resembling TikTok */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.3s ease;
+}
+.slide-enter {
+  transform: translateY(100%);
+}
+.slide-leave-to {
+  transform: translateY(-100%);
 }
 
 @media only screen and (max-width: 600px) {
