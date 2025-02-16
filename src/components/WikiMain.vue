@@ -42,10 +42,10 @@ export default {
     image: "",
     url: "",
     isDark: false,
-    touchStartY: 0,
-    touchEndY: 0,
+    touchStartX: 0,
+    touchEndX: 0,
     articleKey: 0, 
-    swipeThreshold: 300
+    swipeThreshold: 250
   };
 },
 methods: {
@@ -71,11 +71,11 @@ methods: {
     }
   },
   handleTouchStart(e) {
-    this.touchStartY = e.changedTouches[0].screenY;
+    this.touchStartX = e.changedTouches[0].screenX;
   },
   handleTouchEnd(e) {
-    this.touchEndY = e.changedTouches[0].screenY;
-    if (this.touchStartY - this.touchEndY > this.swipeThreshold) {
+    this.touchEndX = e.changedTouches[0].screenX;
+    if (this.touchStartX - this.touchEndX > this.swipeThreshold) {
       this.getRandomArticle();
     }
   },
@@ -189,16 +189,15 @@ methods: {
   background-color: #0056b3;
 }
 
-/* Transition animations for swipe up resembling TikTok */
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.3s ease;
+  transition: transform 0.1s ease;
 }
 .slide-enter {
-  transform: translateY(100%);
+  transform: translateX(100%);
 }
 .slide-leave-to {
-  transform: translateY(-100%);
+  transform: translateX(-100%);
 }
 
 @media only screen and (max-width: 600px) {
