@@ -11,15 +11,22 @@
         class="toggle-icon"
         :class="{ rotated: isDark }" />
     </button>
-    <!-- Wrap the container in a transition with a dynamic key -->
     <transition name="slide">
       <div
         :key="articleKey"
         class="container"
         @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
         @touchend="handleTouchEnd"
         @click="openArticle"
+        :style="{ transform: `translateX(${translateX}px)`, transition: touchTransition }"
       >
+        <div v-if="loading" class="skeleton-overlay">
+          <div class="skeleton-line title-skeleton"></div>
+          <div class="skeleton-line description-skeleton"></div>
+          <div class="skeleton-line image-skeleton"></div>
+          <div class="skeleton-line summary-skeleton"></div>
+        </div>
         <div class="body-container">
           <div class="title">{{ title }}</div>
           <div class="description">{{ description }}</div>
@@ -35,51 +42,78 @@
 <script>
 export default {
   data() {
-  return {
-    title: "",
-    description: "",
-    summary: "",
-    image: "",
-    url: "",
-    isDark: false,
-    touchStartX: 0,
-    touchEndX: 0,
-    articleKey: 0, 
-    swipeThreshold: 120
-  };
+    return {
+      title: "",
+      description: "",
+      summary: "",
+      image: "",
+      url: "",
+      isDark: false,
+      touchStartX: 0,
+      translateX: 0,
+      touchTransition: "none",
+      articleKey: 0, 
+      swipeThreshold: 120,
+      loading: false,
+    };
+  },
+  methods: {
+    getRandomArticle() {
+  this.loading = true;
+
+  fetch("https://en.wikipedia.org/api/rest_v1/page/random/summary")
+    .then((res) => res.json())
+    .then((data) => {
+      this.title = data.title;
+      this.description = data.description || "No description available";
+      this.summary = data.extract;
+      this.image = data.thumbnail ? data.thumbnail.source : "";
+      this.url = data.content_urls.desktop.page;
+      this.articleKey++;
+      this.translateX = window.innerWidth;
+
+      setTimeout(() => {
+        this.translateX = 0; 
+        this.loading = false;
+      }, 100);
+    })
+    .catch((err) => {
+      console.error(err);
+      this.loading = false;
+    });
 },
-methods: {
-  getRandomArticle() {
-    fetch("https://en.wikipedia.org/api/rest_v1/page/random/summary")
-      .then((res) => res.json())
-      .then((data) => {
-        this.title = data.title;
-        this.description = data.description || "No description available";
-        this.summary = data.extract;
-        this.image = data.thumbnail ? data.thumbnail.source : "";
-        this.url = data.content_urls.desktop.page;
-        this.articleKey++;
-      })
-      .catch(console.error);
-  },
-  toggleTheme() {
-    this.isDark = !this.isDark;
-  },
-  openArticle() {
-    if (this.url) {
-      window.open(this.url, "_blank");
-    }
-  },
-  handleTouchStart(e) {
-    this.touchStartX = e.changedTouches[0].screenX;
-  },
-  handleTouchEnd(e) {
-    this.touchEndX = e.changedTouches[0].screenX;
-    if (this.touchStartX - this.touchEndX > this.swipeThreshold) {
+
+    toggleTheme() {
+      this.isDark = !this.isDark;
+    },
+    openArticle() {
+      if (this.url) {
+        window.open(this.url, "_blank");
+      }
+    },
+    handleTouchStart(e) {
+      this.touchStartX = e.changedTouches[0].clientX;
+      this.touchTransition = "none";
+    },
+    handleTouchMove(e) {
+      const currentX = e.changedTouches[0].clientX;
+      this.translateX = currentX - this.touchStartX;
+    },
+    handleTouchEnd() {
+  this.touchTransition = "transform 0.3s ease-out";
+  
+  if (this.translateX < -this.swipeThreshold) {
+    this.loading = true;
+    this.translateX = -window.innerWidth;
+    
+    setTimeout(() => {
       this.getRandomArticle();
-    }
-  },
+    }, 200);
+  } else {
+    this.translateX = 0;
+  }
 },
+  },
   mounted() {
     this.getRandomArticle();
   },
@@ -87,9 +121,7 @@ methods: {
 </script>
 
 
-
 <style scoped>
-
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -103,18 +135,70 @@ methods: {
 .container {
   width: 100%;
   max-width: 500px;
+  min-height: 300px; 
   background-color: #fff;
   border: 1px solid black;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
   position: relative;
-  padding-top: 60px; 
-  cursor: pointer; /* Indicates that it is clickable */
+  padding-top: 60px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.3s ease-out, opacity 0.2s ease-out;
+}
+
+.container.loading {
+  opacity: 0; 
 }
 
 .body-container {
   padding: 20px;
   text-align: center;
+}
+
+.skeleton-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  padding: 20px;
+}
+
+.skeleton-line {
+  background: #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  animation: pulse 3s infinite;
+}
+
+.title-skeleton {
+  width: 60%;
+  height: 24px;
+}
+.description-skeleton {
+  width: 80%;
+  height: 14px;
+}
+.image-skeleton {
+  width: 100%;
+  height: 200px;
+}
+.summary-skeleton {
+  width: 100%;
+  height: 18px;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
 }
 
 .theme-toggle {
@@ -191,7 +275,7 @@ methods: {
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease-out;
 }
 .slide-enter {
   transform: translateX(100%);
@@ -221,12 +305,12 @@ methods: {
   .theme-toggle img {
     width: 35px;
   }
-
+  
   .new-article,
   .read-more {
     padding: 5px 10px;
     font-size: 11px;
   }
 }
-
 </style>
+
